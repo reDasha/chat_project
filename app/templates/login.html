@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akiko Chat - Login</title>
+    <link rel="stylesheet" href="../static/styles/login.css">
+</head>
+<body>
+
+<div id="bubbles"></div>
+
+<div class="container">
+    <div class="tab-container">
+        <button class="tab active" onclick="switchTab('login')">Авторизация</button>
+        <button class="tab" onclick="switchTab('register')">Регистрация</button>
+    </div>
+
+    <div class="form-container">
+        <!-- Login Form -->
+        <form id="login-form" class="form active" onsubmit="handleLogin(event)">
+            <div class="input-group">
+                <input type="text" name="username" placeholder="Имя" required>
+            </div>
+            <div class="input-group">
+                <input type="password" name="password" placeholder="Пароль" required>
+            </div>
+            <button type="submit" class="submit-btn">Войти</button>
+        </form>
+
+        <form id="register-form" class="form" onsubmit="handleRegister(event)">
+            <div class="input-group">
+                <input type="email" placeholder="Email" required>
+            </div>
+            <div class="input-group">
+                <input type="text" placeholder="Имя" required>
+            </div>
+            <div class="input-group">
+                <input type="password" placeholder="Пароль" required>
+            </div>
+            <div class="input-group">
+                <input type="password" placeholder="Подтвердите пароль" required>
+            </div>
+            <button type="submit" class="submit-btn">Зарегистрироваться</button>
+        </form>
+    </div>
+</div>
+
+<script src="../static/js/login.js"></script>
+</body>
+</html>

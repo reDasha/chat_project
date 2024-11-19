@@ -27,7 +27,7 @@
 
 ### 1. Клонирование репозитория
 ```bash
-git clone https://github.com/reDasha/chat_project
+git clone https://github.com/reDasha/chat_project.git
 cd chat_project
 ```
 
