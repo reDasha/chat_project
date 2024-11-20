@@ -11,6 +11,7 @@ services:
       - redis
     volumes:
       - .:/app
+    restart: unless-stopped
 
   db:
     image: postgres:13
@@ -20,6 +21,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
   redis:
     image: redis:6
@@ -35,6 +37,7 @@ services:
     depends_on:
       - db
       - redis
+    restart: unless-stopped
 
   nginx:
     image: nginx:latest
@@ -57,6 +60,7 @@ services:
       - web
     volumes:
       - .:/app
+    restart: unless-stopped
 
 volumes:
   postgres_data:

@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     loadUsers();
+    connectWebSocket();
 });
 
 document.getElementById('messageInput').addEventListener('keypress', function(e) {
@@ -10,7 +11,6 @@ document.getElementById('messageInput').addEventListener('keypress', function(e)
 
 let selectedUser = null;
 let socket = null;
-let messagePollingInterval = null;
 
 
 function subscribeToTelegram() {
@@ -26,9 +26,10 @@ async function handleLogout() {
 
 function selectUser(userId, userName) {
     selectedUser = userId;
-    document.querySelectorAll('.user-item').forEach(item =>
-        item.classList.remove('active')
-    );
+    document.querySelectorAll('.user-item').forEach(item => {
+        item.classList.remove('active');
+        item.classList.remove('new-message');
+    });
     document.getElementById(`user-${userId}`).classList.add('active');
 
     const chatMessages = document.getElementById('chatMessages');
@@ -40,8 +41,6 @@ function selectUser(userId, userName) {
     sendButton.disabled = false;
 
     loadMessages(userId);
-    connectWebSocket();
-    startMessagePolling(userId);
 }
 
 async function loadUsers() {
@@ -64,21 +63,39 @@ async function loadUsers() {
     }
 }
 
+let sockets = {};
+
 function connectWebSocket() {
-    if (socket) socket.close();
+    if (selectedUser === null) return;
 
-    socket = new WebSocket(`wss://${window.location.host}/chat/ws/${selectedUser}`);
+    if (sockets[selectedUser]) {
+        console.log("WebSocket уже подключен для этого пользователя.");
+        return;  // Соединение уже существует
+    }
 
-    socket.onopen = () => console.log('WebSocket соединение установлено');
+    sockets[selectedUser] = new WebSocket(`ws://${window.location.host}/chat/ws/${selectedUser}`);
 
-    socket.onmessage = (event) => {
-        const incomeMessage = JSON.parse(event.data);
-        if (incomeMessage.userId === selectedUser) {
-            addMessage(incomeMessage.content, incomeMessage.userId);
+    sockets[selectedUser].onopen = () => console.log(`WebSocket соединение установлено для пользователя ${selectedUser}`);
+
+    sockets[selectedUser].onmessage = (event) => {
+        const incomingMessage = JSON.parse(event.data);
+        const isForSelectedUser = incomingMessage.sender_id === selectedUser || incomingMessage.receiver_id === selectedUser;
+        if (isForSelectedUser) {
+            addMessage(incomingMessage.content, incomingMessage.sender_id);
+        }
+
+        if (!isForSelectedUser) {
+            const userElement = document.getElementById(`user-${incomingMessage.sender_id}`);
+            if (userElement) {
+                userElement.classList.add('new-message');
+            }
         }
     };
 
-    socket.onclose = () => console.log('WebSocket соединение закрыто');
+    sockets[selectedUser].onclose = () => {
+        console.log(`WebSocket соединение закрыто для пользователя ${selectedUser}`);
+        delete sockets[selectedUser]; // Удаляем соединение, когда оно закрывается
+    };
 }
 
 async function loadMessages(userId) {
@@ -180,18 +197,26 @@ async function sendMessage() {
 }
 
 
-function addMessage(text, recipient_id) {
-    const messagesContainer = document.getElementById('messages');
-    messagesContainer.insertAdjacentHTML('beforeend', createMessageElement(text, recipient_id));
+function addMessage(text, senderId) {
+    const chatMessages = document.getElementById('chatMessages');
+
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const isSent = senderId !== selectedUser;
+
+    const messageGroup = document.createElement('div');
+    messageGroup.className = `message-group ${isSent ? 'sent' : ''}`;
+    messageGroup.innerHTML = `
+        <div class="message ${isSent ? 'sent' : 'received'}">
+            ${text}
+            <div class="message-time">${time}</div>
+        </div>
+    `;
+    chatMessages.appendChild(messageGroup);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 function createMessageElement(text, recipient_id) {
     const userID = parseInt(selectedUser, 10);
     const messageClass = userID === recipient_id ? 'my-message' : 'other-message';
     return `<div class="message ${messageClass}">${text}</div>`;
-}
-
-function startMessagePolling(userId) {
-    clearInterval(messagePollingInterval);
-    messagePollingInterval = setInterval(() => loadMessages(userId), 1000);
 }
