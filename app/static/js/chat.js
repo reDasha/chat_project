@@ -59,7 +59,7 @@ async function loadUsers() {
             </div>
         `).join('');
     } catch (error) {
-        console.error('Error loading users:', error);
+        console.error('Ошибка загрузки пользователей:', error);
     }
 }
 
@@ -70,7 +70,7 @@ function connectWebSocket() {
 
     if (sockets[selectedUser]) {
         console.log("WebSocket уже подключен для этого пользователя.");
-        return;  // Соединение уже существует
+        return;
     }
 
     sockets[selectedUser] = new WebSocket(`ws://${window.location.host}/chat/ws/${selectedUser}`);
@@ -94,7 +94,7 @@ function connectWebSocket() {
 
     sockets[selectedUser].onclose = () => {
         console.log(`WebSocket соединение закрыто для пользователя ${selectedUser}`);
-        delete sockets[selectedUser]; // Удаляем соединение, когда оно закрывается
+        delete sockets[selectedUser];
     };
 }
 
@@ -113,7 +113,7 @@ async function loadMessages(userId) {
                 console.error("Unauthorized: Token might be invalid or expired");
                 handleLogout();
             } else {
-                console.error(`Error loading messages: ${response.statusText}`);
+                console.error(`Ошибка загрузки сообщений: ${response.statusText}`);
             }
             return;
         }
